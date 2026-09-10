@@ -1,0 +1,18 @@
+rootProject.name = 'poneglyph'
+
+include 'core'
+
+// The Ghidra extension module is only wired in when a Ghidra install is available, so
+// `gradle :core:test` and the CLI jar work on machines without Ghidra. The Gradle project is
+// named "Poneglyph" because Ghidra's build script derives the extension name from it.
+def ghidraDir = System.getenv('GHIDRA_INSTALL_DIR')
+if (ghidraDir == null && settings.hasProperty('GHIDRA_INSTALL_DIR')) {
+    ghidraDir = settings.GHIDRA_INSTALL_DIR
+}
+if (ghidraDir != null && new File(ghidraDir).isDirectory()) {
+    include 'Poneglyph'
+    project(':Poneglyph').projectDir = file('ghidra-ext')
+} else {
+    logger.lifecycle("GHIDRA_INSTALL_DIR not set or not a directory; skipping the Ghidra extension module. " +
+            "Set it to your Ghidra install (e.g. ~/tools/ghidra_12.1.3_PUBLIC) to build the extension.")
+}

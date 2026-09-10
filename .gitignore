@@ -1,0 +1,14 @@
+.gradle/
+build/
+**/build/
+*.class
+*.log
+.idea/
+*.iml
+.DS_Store
+/dist/
+/ghidra-ext/lib/*.jar
+/ghidra-ext/dist/
+/ghidra-ext/.antProperties.xml
+/ghidra-ext/os/
+/ghidra-ext/bin/
