@@ -1,0 +1,18 @@
+Write 3 to 5 simple unit tests for the C function below using assert() from <assert.h>.
+
+Function under test (it is already compiled and available; do NOT repeat or redefine it):
+```c
+{code}
+```
+
+Original decompiler output, for context on the intended behaviour:
+```c
+{pseudo_code}
+```
+
+Requirements:
+- Provide exactly one `int main(void)` that calls the function with concrete inputs and checks the results with assert(...).
+- Each assert must be a single self-contained expression. Declare any small arrays, strings or buffers inside main.
+- Use only the C standard library. Do not print anything, do not read input, do not define the function under test again.
+- Prefer inputs whose expected results you are certain about; avoid undefined behaviour such as out-of-bounds access or NULL dereference.
+- Return 0 at the end of main.

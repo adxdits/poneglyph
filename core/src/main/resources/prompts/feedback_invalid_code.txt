@@ -1,0 +1,1 @@
+The previous response did not contain a complete C function definition. Respond with the full C source code of the function inside a single ```c fenced block and nothing else.

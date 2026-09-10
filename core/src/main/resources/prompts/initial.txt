@@ -1,0 +1,8 @@
+Rewrite the following Ghidra decompiler output as clean, readable C. The original function is named {function_name}; you may rename it to something descriptive.
+
+Decompiler output:
+```c
+{pseudo_code}
+```
+
+Respond with the complete C source code only.

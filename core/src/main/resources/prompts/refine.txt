@@ -1,0 +1,15 @@
+You previously rewrote the following Ghidra decompiler output (function {function_name}) as C.
+
+Decompiler output:
+```c
+{pseudo_code}
+```
+
+Your previous attempt:
+```c
+{code}
+```
+
+{feedback}
+
+Keep the same function name and signature as your previous attempt unless the errors require changing them. Respond with the complete, corrected C source code only.

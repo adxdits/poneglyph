@@ -1,0 +1,72 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'Poneglyph core: LLM client, compiler harness, test runner and refinement loop (no Ghidra dependency)'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.google.code.gson:gson:2.11.0'
+
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+base {
+    archivesName = 'poneglyph-core'
+}
+
+java {
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    // The core library must stay usable from plain Java 17 (CLI users), even though
+    // the Ghidra extension itself needs 21.
+    options.release = 17
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-Xlint:all' << '-Xlint:-serial' << '-Xlint:-processing'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    // Sample pseudo-code + replay files used by the end-to-end CLI tests.
+    systemProperty 'poneglyph.samples', rootProject.file('tests/samples').absolutePath
+    // Let CI point at a specific compiler (e.g. PONEGLYPH_GCC=clang).
+    if (System.getenv('PONEGLYPH_GCC')) {
+        systemProperty 'poneglyph.gcc', System.getenv('PONEGLYPH_GCC')
+    }
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat 'full'
+        showStandardStreams = false
+    }
+}
+
+// Standalone CLI: java -jar core/build/libs/poneglyph-cli.jar input.c
+tasks.register('cliJar', Jar) {
+    group = 'build'
+    description = 'Builds the self-contained poneglyph-cli.jar'
+    archiveBaseName = 'poneglyph-cli'
+    archiveVersion = ''
+    manifest {
+        attributes 'Main-Class': 'poneglyph.cli.Main',
+                   'Implementation-Title': 'Poneglyph CLI',
+                   'Implementation-Version': project.version
+    }
+    from sourceSets.main.output
+    dependsOn configurations.runtimeClasspath
+    from {
+        configurations.runtimeClasspath.findAll { it.name.endsWith('.jar') }.collect { zipTree(it) }
+    }
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/versions/**/module-info.class', 'module-info.class'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.named('assemble') {
+    dependsOn 'cliJar'
+}
