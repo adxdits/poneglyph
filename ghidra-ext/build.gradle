@@ -1,0 +1,47 @@
+// Builds the Poneglyph Ghidra extension against a Ghidra installation.
+//
+// Set GHIDRA_INSTALL_DIR (environment variable or -PGHIDRA_INSTALL_DIR=...) to the root of a
+// Ghidra 12.x install. Output: ghidra-ext/dist/ghidra_<version>_PUBLIC_<date>_Poneglyph.zip
+
+def ghidraInstallDir = System.env.GHIDRA_INSTALL_DIR
+if (!ghidraInstallDir && project.hasProperty('GHIDRA_INSTALL_DIR')) {
+    ghidraInstallDir = project.getProperty('GHIDRA_INSTALL_DIR')
+}
+if (!ghidraInstallDir) {
+    throw new GradleException('GHIDRA_INSTALL_DIR is not set; point it at your Ghidra installation')
+}
+
+apply from: new File(ghidraInstallDir).getCanonicalPath() + '/support/buildExtension.gradle'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // The core library (and its single dependency, Gson) are copied into lib/ by Ghidra's
+    // copyDependencies task and shipped inside the extension zip.
+    implementation project(':core')
+
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-Xlint:deprecation'
+}
+
+// Plain JUnit tests for the pure helpers (comment merging, flag parsing, context resolution).
+// Anything that needs a running tool is exercised manually in Ghidra; see README.
+tasks.named('test') {
+    useJUnitPlatform()
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat 'full'
+    }
+}
+
+// Ghidra's build script names the zip after the Gradle project, which settings.gradle maps to
+// "Poneglyph". Keep the extension zip out of the root build directory.
+buildExtension.exclude 'lib/README*'
