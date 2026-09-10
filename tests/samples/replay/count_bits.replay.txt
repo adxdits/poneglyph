@@ -1,0 +1,44 @@
+=== decompile ===
+```c
+#include <stdint.h>
+
+/* First attempt: wrong, it counts shifts instead of set bits. */
+uint32_t count_bits(uint32_t value)
+{
+    uint32_t count = 0;
+    while (value != 0) {
+        count++;
+        value >>= 1;
+    }
+    return count;
+}
+```
+=== tests ===
+```c
+#include <assert.h>
+#include <stdint.h>
+
+int main(void)
+{
+    assert(count_bits(0) == 0);
+    assert(count_bits(1) == 1);
+    assert(count_bits(0xF0) == 4);
+    assert(count_bits(0xFFFFFFFFu) == 32);
+    assert(count_bits(0x80000000u) == 1);
+    return 0;
+}
+```
+=== decompile ===
+```c
+#include <stdint.h>
+
+uint32_t count_bits(uint32_t value)
+{
+    uint32_t count = 0;
+    while (value != 0) {
+        count += value & 1u;
+        value >>= 1;
+    }
+    return count;
+}
+```

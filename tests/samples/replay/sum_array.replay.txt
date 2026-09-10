@@ -1,0 +1,47 @@
+=== decompile ===
+Here is a cleaner version of the function:
+
+```c
+#include <stdint.h>
+
+int64_t sum_array(const int32_t *values, int count)
+{
+    int64_t sum = 0;
+    for (int i = 0; i < count; i++) {
+        sum += values[i]
+    }
+    return sum;
+}
+```
+
+I renamed the parameters to reflect that `param_1` is an array of 32-bit integers.
+=== decompile ===
+```c
+#include <stdint.h>
+
+int64_t sum_array(const int32_t *values, int count)
+{
+    int64_t sum = 0;
+    for (int i = 0; i < count; i++) {
+        sum += values[i];
+    }
+    return sum;
+}
+```
+=== tests ===
+```c
+#include <assert.h>
+#include <stdint.h>
+
+int main(void)
+{
+    int32_t a[] = {1, 2, 3, 4};
+    int32_t b[] = {-5, 5};
+    int32_t c[] = {2147483647, 2147483647};
+    assert(sum_array(a, 4) == 10);
+    assert(sum_array(b, 2) == 0);
+    assert(sum_array(a, 0) == 0);
+    assert(sum_array(c, 2) == 4294967294LL);
+    return 0;
+}
+```

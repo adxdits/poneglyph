@@ -1,0 +1,39 @@
+=== decompile ===
+```c
+#include <string.h>
+
+void str_reverse(char *s)
+{
+    int left = 0;
+    int right = (int) strlen(s) - 1;
+    while (left < right) {
+        char tmp = s[left];
+        s[left] = s[right];
+        s[right] = tmp;
+        left++;
+        right--;
+    }
+}
+```
+=== tests ===
+```c
+#include <assert.h>
+#include <string.h>
+
+int main(void)
+{
+    char a[] = "hello";
+    char b[] = "";
+    char c[] = "x";
+    char d[] = "abcd";
+    str_reverse(a);
+    str_reverse(b);
+    str_reverse(c);
+    str_reverse(d);
+    assert(strcmp(a, "olleh") == 0);
+    assert(strcmp(b, "") == 0);
+    assert(strcmp(c, "x") == 0);
+    assert(strcmp(d, "dcba") == 0);
+    return 0;
+}
+```
