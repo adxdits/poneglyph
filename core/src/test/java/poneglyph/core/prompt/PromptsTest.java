@@ -45,6 +45,19 @@ class PromptsTest {
     }
 
     @Test
+    void retryRepeatsTheInitialRequestWithFeedbackAppended() {
+        Prompts p = Prompts.defaults();
+        LlmRequest r = p.retry("PSEUDO", p.feedback(Stage.INVALID_CODE, null), "FUN_1");
+        assertEquals(LlmRequest.Kind.DECOMPILE, r.kind());
+        assertTrue(r.userPrompt().contains("PSEUDO"));
+        assertTrue(r.userPrompt().contains("did not contain a complete C function"));
+        assertFalse(r.userPrompt().contains("Your previous attempt"));
+        assertEquals(p.initial("PSEUDO", "FUN_1").systemPrompt(), r.systemPrompt());
+        // With no feedback it is exactly the initial request.
+        assertEquals(p.initial("PSEUDO", "FUN_1").userPrompt(), p.retry("PSEUDO", "  ", "FUN_1").userPrompt());
+    }
+
+    @Test
     void feedbackTemplatesUseTheAgreedWording() {
         Prompts p = Prompts.defaults();
         String compile = p.feedback(Stage.COMPILE_ERROR, "function.c:3:1: error: expected ';'");

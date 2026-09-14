@@ -104,6 +104,24 @@ class RefinementLoopTest {
         assertNull(r.turns().get(0).code());
         String second = fake.requestsOf(LlmRequest.Kind.DECOMPILE).get(1).userPrompt();
         assertTrue(second.contains("did not contain a complete C function"), second);
+        // There was no usable previous attempt, so the retry must not refer to one.
+        assertFalse(second.contains("Your previous attempt"), second);
+        assertFalse(second.contains("```c\n```"), second);
+        assertTrue(second.contains("Rewrite the following Ghidra decompiler output"), second);
+        assertEquals(Status.GREEN, r.status());
+    }
+
+    @Test
+    void refinePromptIsUsedOnceSomeCodeExists() throws Exception {
+        Gcc.assumeAvailable();
+        // Turn 1 produces no code, turn 2 produces code that does not compile, so turn 3 has a
+        // previous attempt to refine and must say so.
+        FakeLlmClient fake = new FakeLlmClient().decompile("Sorry, I can't.", BROKEN, GOOD).tests(TESTS);
+        RefinementResult r = loop(fake, 3).run(PSEUDO, null, null, CancelToken.NONE);
+
+        String third = fake.requestsOf(LlmRequest.Kind.DECOMPILE).get(2).userPrompt();
+        assertTrue(third.contains("Your previous attempt"), third);
+        assertTrue(third.contains("return a + b\n"), third);
         assertEquals(Status.GREEN, r.status());
     }
 

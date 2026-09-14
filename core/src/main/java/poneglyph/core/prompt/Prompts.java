@@ -122,6 +122,20 @@ public final class Prompts {
         return LlmRequest.decompile(render(SYSTEM, vars), render(INITIAL, vars));
     }
 
+    /**
+     * A retry of the initial request, with {@code feedback} appended. Used when the previous turn
+     * produced no code at all: there is no "previous attempt" to refine, so referring to one would
+     * only confuse the model.
+     */
+    public LlmRequest retry(String pseudoCode, String feedback, String functionName) {
+        LlmRequest initial = initial(pseudoCode, functionName);
+        String f = Text.nullToEmpty(feedback).strip();
+        if (f.isEmpty()) {
+            return initial;
+        }
+        return LlmRequest.decompile(initial.systemPrompt(), initial.userPrompt().stripTrailing() + "\n\n" + f);
+    }
+
     public LlmRequest refine(String pseudoCode, String previousCode, String feedback, String functionName) {
         Map<String, String> vars = Map.of(
                 "pseudo_code", pseudoCode.strip(),

@@ -99,9 +99,15 @@ public final class RefinementLoop {
                 progress.onTurnStart(n, config.maxTurns());
                 long start = System.nanoTime();
 
-                LlmRequest request = n == 1
-                        ? prompts.initial(pseudoCode, name)
-                        : prompts.refine(pseudoCode, previousCode, feedback, name);
+                LlmRequest request;
+                if (n == 1) {
+                    request = prompts.initial(pseudoCode, name);
+                } else if (previousCode == null) {
+                    // Nothing usable has come back yet, so there is no previous attempt to refine.
+                    request = prompts.retry(pseudoCode, feedback, name);
+                } else {
+                    request = prompts.refine(pseudoCode, previousCode, feedback, name);
+                }
 
                 progress.onMessage("turn " + n + "/" + config.maxTurns() + ": asking " + decompiler.describe());
                 String raw;
