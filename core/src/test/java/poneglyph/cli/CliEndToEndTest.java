@@ -8,6 +8,7 @@ import poneglyph.core.testutil.FakeOpenAiServer;
 import poneglyph.core.testutil.Gcc;
 import poneglyph.core.testutil.Samples;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -34,9 +35,14 @@ class CliEndToEndTest {
     }
 
     private static Run cli(String... args) {
+        return cliWithInput("", args);
+    }
+
+    private static Run cliWithInput(String stdin, String... args) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
-        int exit = Main.run(args, new PrintStream(out, true, StandardCharsets.UTF_8),
+        int exit = Main.run(args, new ByteArrayInputStream(stdin.getBytes(StandardCharsets.UTF_8)),
+                new PrintStream(out, true, StandardCharsets.UTF_8),
                 new PrintStream(err, true, StandardCharsets.UTF_8));
         return new Run(exit, out.toString(StandardCharsets.UTF_8), err.toString(StandardCharsets.UTF_8));
     }
@@ -149,6 +155,37 @@ class CliEndToEndTest {
         assertTrue(r.err.contains("/nonexistent/dir/gcc-xyz"), r.err);
         assertTrue(r.err.contains("--gcc"), r.err);
         assertTrue(r.err.contains("settings"), r.err);
+    }
+
+    @Test
+    void readsPseudoCodeFromStdin() throws Exception {
+        Gcc.assumeAvailable();
+        String pseudo = Samples.read(Samples.pseudo("count_bits"));
+        Run r = cliWithInput(pseudo, withGcc("--replay", Samples.replay("count_bits").toString(), "-"));
+        assertEquals(0, r.exit, r.out + r.err);
+        assertTrue(r.out.contains("input:    standard input"), r.out);
+        assertTrue(r.out.contains("best turn 2 of 2"), r.out);
+    }
+
+    @Test
+    void emptyStdinIsRejected() {
+        Run r = cliWithInput("   \n", withGcc("--replay", Samples.replay("count_bits").toString(), "-"));
+        assertEquals(3, r.exit);
+        assertTrue(r.err.contains("standard input is empty"), r.err);
+    }
+
+    @Test
+    void stdinAndAFileAreMutuallyExclusive() {
+        Run r = cli("-", Samples.pseudo("count_bits").toString());
+        assertEquals(3, r.exit);
+        assertTrue(r.err.contains("cannot read both standard input"), r.err);
+    }
+
+    @Test
+    void versionFlag() {
+        Run r = cli("--version");
+        assertEquals(0, r.exit);
+        assertEquals("Poneglyph CLI " + Main.VERSION, r.out.strip());
     }
 
     @Test

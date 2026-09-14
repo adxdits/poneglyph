@@ -23,6 +23,7 @@ import poneglyph.core.prompt.Prompts;
 import poneglyph.core.verify.TestRunner;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -44,11 +45,16 @@ public final class Main {
     }
 
     public static void main(String[] args) {
-        System.exit(run(args, System.out, System.err));
+        System.exit(run(args, System.in, System.out, System.err));
     }
 
-    /** Testable entry point. */
+    /** Testable entry point reading any stdin input from {@link System#in}. */
     public static int run(String[] args, PrintStream out, PrintStream err) {
+        return run(args, System.in, out, err);
+    }
+
+    /** Testable entry point. {@code in} is only read when the input file is given as "-". */
+    public static int run(String[] args, InputStream in, PrintStream out, PrintStream err) {
         Options opts;
         try {
             opts = Options.parse(args);
@@ -62,6 +68,10 @@ public final class Main {
             printUsage(out);
             return 0;
         }
+        if (opts.version) {
+            out.println("Poneglyph CLI " + VERSION);
+            return 0;
+        }
         if (opts.exportPrompts != null) {
             try {
                 Prompts.exportDefaults(opts.exportPrompts);
@@ -72,7 +82,7 @@ public final class Main {
                 return 3;
             }
         }
-        if (opts.input == null) {
+        if (opts.input == null && !opts.readStdin) {
             err.println("error: no input file given");
             err.println();
             printUsage(err);
@@ -81,9 +91,15 @@ public final class Main {
 
         String pseudo;
         try {
-            pseudo = Files.readString(opts.input, StandardCharsets.UTF_8);
+            pseudo = opts.readStdin
+                    ? new String(in.readAllBytes(), StandardCharsets.UTF_8)
+                    : Files.readString(opts.input, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            err.println("error: cannot read " + opts.input + ": " + e.getMessage());
+            err.println("error: cannot read " + opts.inputLabel() + ": " + e.getMessage());
+            return 3;
+        }
+        if (pseudo.isBlank()) {
+            err.println("error: " + opts.inputLabel() + " is empty");
             return 3;
         }
 
@@ -126,7 +142,7 @@ public final class Main {
 
         if (!opts.quiet && !opts.json) {
             out.println("Poneglyph CLI " + VERSION);
-            out.println("input:    " + opts.input);
+            out.println("input:    " + opts.inputLabel());
             out.println("model:    " + decompileModel.describe());
             if (testModel != decompileModel) {
                 out.println("tests:    " + testModel.describe());
@@ -229,7 +245,10 @@ public final class Main {
     }
 
     static void printUsage(PrintStream out) {
-        out.println("usage: java -jar poneglyph-cli.jar [options] <input.c>");
+        out.println("usage: java -jar poneglyph-cli.jar [options] <input.c|->");
+        out.println();
+        out.println("Reads Ghidra decompiler output for one function from a file, or from standard input");
+        out.println("when the input is given as '-'.");
         out.println();
         out.println("Rewrites Ghidra decompiler pseudo-code as clean C using a local LLM, then compiles and");
         out.println("tests the result, feeding errors back to the model for up to --max-turns turns.");
@@ -262,6 +281,7 @@ public final class Main {
         out.println("  --verbose           include prompts and raw model responses");
         out.println("  --quiet             print only the one-line verdict");
         out.println("  -h, --help          this help");
+        out.println("  --version           print the version and exit");
         out.println();
         out.println("exit codes: 0 GREEN (compiles and passes tests), 1 YELLOW (compiles, tests fail/unknown),");
         out.println("            2 RED (does not compile), 3 usage or infrastructure error");
@@ -294,6 +314,13 @@ public final class Main {
         boolean verbose;
         boolean quiet;
         boolean help;
+        boolean version;
+        boolean readStdin;
+
+        /** How the input is named in messages. */
+        String inputLabel() {
+            return readStdin ? "standard input" : String.valueOf(input);
+        }
 
         static Options parse(String[] args) {
             Options o = new Options();
@@ -303,6 +330,15 @@ public final class Main {
                     case "-h":
                     case "--help":
                         o.help = true;
+                        break;
+                    case "--version":
+                        o.version = true;
+                        break;
+                    case "-":
+                        if (o.input != null || o.readStdin) {
+                            throw new IllegalArgumentException("only one input is supported");
+                        }
+                        o.readStdin = true;
                         break;
                     case "--endpoint":
                         o.endpoint = value(args, ++i, a);
@@ -380,6 +416,9 @@ public final class Main {
                         if (o.input != null) {
                             throw new IllegalArgumentException("only one input file is supported (got "
                                     + o.input + " and " + a + ")");
+                        }
+                        if (o.readStdin) {
+                            throw new IllegalArgumentException("cannot read both standard input and " + a);
                         }
                         o.input = Path.of(a);
                 }

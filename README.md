@@ -50,8 +50,15 @@ off the Swing thread.
 java -jar core/build/libs/poneglyph-cli.jar --endpoint http://localhost:11434/v1 --model qwen2.5-coder:7b input.c
 ```
 
+Pass `-` instead of a file to read the pseudo-code from standard input, which is handy from a
+Ghidra script or a `for` loop over dumped functions:
+
+```sh
+cat FUN_00101149.c | java -jar core/build/libs/poneglyph-cli.jar --quiet -
+```
+
 Key flags: `--max-turns N`, `--gcc PATH`, `--api-mode chat|completion`, `--test-model NAME`,
-`--out FILE`, `--json`, `--verbose`, `--quiet`, `--replay FILE` (demo with no model),
+`--out FILE`, `--json`, `--verbose`, `--quiet`, `--version`, `--replay FILE` (demo with no model),
 `--export-prompts DIR` / `--prompts DIR` (edit prompt templates). Exit codes: 0 GREEN, 1 YELLOW,
 2 RED, 3 usage/infrastructure error.
 
