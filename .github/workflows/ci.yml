@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    # The core library and CLI have no Ghidra dependency, so they build anywhere.
+    # settings.gradle skips the extension module when GHIDRA_INSTALL_DIR is unset.
+    name: core (${{ matrix.os }}, JDK ${{ matrix.java }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Linux runs gcc, macOS runs Apple clang: the compile and test-harness
+        # classification differ subtly between them, so cover both.
+        os: [ubuntu-latest, macos-latest]
+        java: ['17', '21']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Show the C compiler
+        run: cc --version && gcc --version
+
+      - name: Test
+        run: ./gradlew :core:test --no-daemon
+
+      - name: Build the CLI jar
+        run: ./gradlew :core:cliJar --no-daemon
+
+      - name: Run the loop on the samples without a model
+        shell: bash
+        run: |
+          set -euo pipefail
+          for sample in count_bits sum_array str_reverse; do
+            java -jar core/build/libs/poneglyph-cli.jar --quiet \
+              --replay "tests/samples/replay/$sample.replay.txt" \
+              "tests/samples/$sample.ghidra.c"
+          done
+
+      - name: Upload test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ matrix.os }}-jdk${{ matrix.java }}
+          path: core/build/reports/tests/test

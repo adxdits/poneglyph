@@ -1,5 +1,7 @@
 # Poneglyph
 
+[![CI](https://github.com/adxdits/poneglyph/actions/workflows/ci.yml/badge.svg)](https://github.com/adxdits/poneglyph/actions/workflows/ci.yml)
+
 **AI Decompile & Verify for Ghidra.** Right-click a function in the Decompiler, and a *local* LLM
 rewrites it into clean C, then proves the rewrite by compiling it and running model-generated
 tests, feeding errors back for up to three refinement turns. You get the refined C next to the
