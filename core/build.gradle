@@ -9,7 +9,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.google.code.gson:gson:2.11.0'
+    // error_prone_annotations is a build-time-only annotation jar that Gson pulls in. It is never
+    // loaded at runtime, so keep it out of the CLI jar and the Ghidra extension zip.
+    implementation('com.google.code.gson:gson:2.11.0') {
+        exclude group: 'com.google.errorprone', module: 'error_prone_annotations'
+    }
 
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
