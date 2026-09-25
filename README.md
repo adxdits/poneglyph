@@ -101,7 +101,7 @@ across turns) → classify the result → stop or feed targeted feedback back fo
 | `COMPILE_ERROR` | RED | "the specific error messages are: … regenerate the code" |
 | `RUNTIME_ERROR` | YELLOW | same pattern with the crash/timeout output |
 | `TEST_MISMATCH` | YELLOW | "incorrect outputs … Specifically: … regenerate the code" |
-| `TESTS_UNKNOWN` | YELLOW | none — nothing actionable, loop stops |
+| `TESTS_UNKNOWN` | YELLOW | none nothing actionable, loop stops |
 | `OK` | GREEN | none — loop stops |
 
 Notes: code extraction strips `<think>` blocks, fences and prose, preferring the longest fenced
@@ -110,7 +110,7 @@ missing helpers are caught. Tests are generated once and reused across turns (re
 a later turn breaks the build, e.g. a renamed function); a failing `assert()` is recorded rather
 than aborting, so every failing case is reported in one run. The **best turn** (by stage, then
 fewest test failures) is always returned, not just the last one. Prompts live as editable files in
-`core/src/main/resources/prompts/*.txt` — export with `--export-prompts DIR`.
+`core/src/main/resources/prompts/*.txt` export with `--export-prompts DIR`.
 
 ## Building from source
 
