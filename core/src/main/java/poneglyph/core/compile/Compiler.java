@@ -1,7 +1,5 @@
 package poneglyph.core.compile;
 
-import poneglyph.core.CancelToken;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,6 +7,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import poneglyph.core.CancelToken;
 
 /**
  * Thin wrapper around gcc (or any gcc-compatible driver such as clang). Writes sources to a work
@@ -20,9 +20,9 @@ public final class Compiler {
     public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(60);
     private static final int MAX_OUTPUT_CHARS = 64 * 1024;
 
-    /** Flags used for every compilation. Warnings are silenced: only hard errors are fed back to the model. */
+    /** Flags used for every compilation. Selected invalid-C warnings are promoted to hard errors. */
     static final List<String> BASE_FLAGS = List.of(
-            "-std=gnu11", "-w", "-fno-diagnostics-color", "-O0", "-fno-strict-aliasing",
+            "-std=gnu11", "-fno-diagnostics-color", "-O0", "-fno-strict-aliasing",
             "-Werror=implicit-function-declaration", "-Werror=implicit-int", "-Werror=return-type");
 
     private final String gccPath;
