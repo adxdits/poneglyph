@@ -135,7 +135,7 @@ examples/    prompt profile for LLM4Decompile-style completion models
 ## Limitations
 
 - **Tests are only as good as the model that wrote them.** GREEN means "passes a handful of
-  model-written cases", not "semantically equivalent to the binary" — read the generated tests.
+  model-written cases", not "semantically equivalent to the binary" read the generated tests.
 - Refined code is compiled for the host. Functions relying on target-specific layout, inline
   assembly, or state Ghidra excluded from the function body may need hand editing.
 - Calls to other program functions get a plausible model-declared prototype but aren't executed
